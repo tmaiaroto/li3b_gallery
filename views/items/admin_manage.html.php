@@ -67,15 +67,21 @@
 			<div class="alert alert-info">
 				<h2>Gallery Information</h2>
 				<!--
-
 				<p><strong>Modified</strong><br /><?=$this->time->to('nice', $document->modified); ?></p>
-
 				-->
 				<p><strong>Created:</strong> <?=$this->time->to('nice', $document->created); ?></p>
 				<p><strong>Published:</strong> <?=($document->published) ? 'Yes':'No'; ?></p>
+				<p><strong>JSON Feed Published:</strong> <?=($document->feedPublished) ? 'Yes':'No'; ?></p>
 				<?php /* <p><?=$this->html->link('View gallery JSON feed.', array('library' => 'gallery', 'controller' => 'gallery', 'action' => 'feed', 'type' => 'json', 'args' => array($document->url)), array('target' => '_blank')); ?></p> */ ?>
 				<p><i class="icon-pencil"></i> <?=$this->html->link('Click here to edit gallery settings.', array('admin' => true, 'library' => 'li3b_gallery', 'controller' => 'galleries', 'action' => 'update', 'args' => array($document->_id))); ?></p>
 				<p><i class="icon-eye-open"></i> <?=$this->html->link('Click here to view this gallery.', array('admin' => null, 'library' => 'li3b_gallery', 'controller' => 'galleries', 'action' => 'view', 'args' => array($document->_id)), array('target' => '_blank')); ?></p>
+				<?php
+				if($document->feedPublished) {
+				?>
+				<p><i class="icon-share"></i> <?=$this->html->link('Click here to view this gallery\'s JSON feed.', array('admin' => null, 'type' => 'json', 'library' => 'li3b_gallery', 'controller' => 'galleries', 'action' => 'feed', 'args' => array($document->url)), array('target' => '_blank')); ?></p>
+				<?php
+				}
+				?>
 			</div>
 		</div>
 	</div>
@@ -127,9 +133,6 @@
 	</div>
 </div>
 </div>
-
-
-
 
 <div id="edit_gallery_item_modal" class="modal hide" title="Edit Item">
 	<div class="modal-header">
@@ -207,4 +210,3 @@ $(document).ready(function() {
 <style type="text/css">
 .ui-corner-all { border-radius: 0px; -moz-border-radius-bottomright: 0px; -moz-border-radius-bottomleft: 0px; -moz-border-radius-topright: 0px; -moz-border-radius-topleft: 0px;}
 </style>
-
