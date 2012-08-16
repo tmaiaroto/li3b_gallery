@@ -16,6 +16,10 @@ Menu::applyFilter('static_menu',  function($self, $params, $chain) {
 				array(
 					'title' => 'Create New',
 					'url' => array('library' => 'li3b_gallery', 'admin' => true, 'controller' => 'galleries', 'action' => 'create')
+				),
+				array(
+					'title' => 'Clear Thumbnail Cache',
+					'url' => array('library' => 'li3b_gallery', 'admin' => true, 'controller' => 'items', 'action' => 'clear_cache')
 				)
 			)
 		);

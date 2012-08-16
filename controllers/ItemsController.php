@@ -1,22 +1,18 @@
 <?php
 namespace li3b_gallery\controllers;
 
-use lithium\util\Set;
 use li3b_gallery\models\Asset;
-use li3_flash_message\extensions\storage\FlashMessage;
-
+use li3b_gallery\extensions\util\Thumbnail;
 use li3b_gallery\models\Item;
 use li3b_gallery\models\Gallery;
+use li3_flash_message\extensions\storage\FlashMessage;
+use lithium\util\Set;
 use \MongoDate;
 use \MongoId;
 
 use lithium\analysis\Logger;
 
 class ItemsController extends \lithium\action\Controller {
-	
-	protected $_assetSchema = array(
-		'file_type' => array('type' => 'string')
-	);
 	
 	public function admin_index() {
 		$this->_render['layout'] = 'admin';
@@ -158,6 +154,7 @@ class ItemsController extends \lithium\action\Controller {
 	 */
 	public function admin_manage($id=null) {
 		if(empty($id)) {
+			FlashMessage::write('You must provide a gallery id to manage its items.', array(), 'default');
 			return $this->redirect(array('admin' => true, 'library' => 'li3b_gallery', 'controller' => 'galleries', 'action' => 'index'));
 		}
 		
@@ -366,8 +363,6 @@ class ItemsController extends \lithium\action\Controller {
 	 * @return JSON Resposne
 	*/
 	public function admin_order($gallery_id=null) {
-		
-		
 		// Set the response to return
 		$response = array('success' => true);
 		
@@ -395,6 +390,26 @@ class ItemsController extends \lithium\action\Controller {
 		}
 		
 		$this->render(array('json' => $response));
+	}
+	
+	/**
+	 * Clears thumbnail image cache.
+	 * 
+	 * From time to time there will be a lot of thumbnails generated in
+	 * the database or on disk. There's no real way to tell which are
+	 * still in use and which aren't. This method will remove all of them.
+	 * They will be re-created on demand when requseted by visitors or admins
+	 * looking at pages that use them or loading URLs to generate them.
+	 * 
+	 */
+	public function admin_clear_cache() {
+		if(Thumbnail::clearCache()) {
+			FlashMessage::write('Successfully cleared the thumbnail image cache.', array(), 'default');
+		} else {
+			FlashMessage::write('Could not clear the thumbnail image cache, please try again.', array(), 'default');
+		}
+		
+		return $this->redirect(array('admin' => true, 'library' => 'li3b_gallery', 'controller' => 'galleries', 'action' => 'index'));
 	}
 	
 	/**

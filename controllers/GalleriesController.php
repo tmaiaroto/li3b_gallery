@@ -14,10 +14,6 @@ use lithium\analysis\Logger;
 
 class GalleriesController extends \lithium\action\Controller {
 	
-	protected $_assetSchema = array(
-		'file_type' => array('type' => 'string')
-	);
-	
 	public function admin_index() {
 		$this->_render['layout'] = 'admin';
 		
@@ -68,7 +64,10 @@ class GalleriesController extends \lithium\action\Controller {
 			$this->request->data['url'] = $this->_generateUrl();
 			
 			if($document->save($this->request->data)) {
+				FlashMessage::write('Successfully created the gallery, you can now add items to it.', array(), 'default');
 				return $this->redirect(array('admin' => true, 'library' => 'li3b_gallery', 'controller' => 'galleries', 'action' => 'index'));
+			} else {
+				FlashMessage::write('There was a problem creating the gallery, please try again.', array(), 'default');
 			}
 			
 		}
@@ -78,6 +77,7 @@ class GalleriesController extends \lithium\action\Controller {
 	
 	public function admin_update($id=null) { 
 		if(empty($id)) {
+			FlashMessage::write('You must provide a gallery id to update.', array(), 'default');
 			return $this->redirect(array('admin' => true, 'library' => 'li3b_gallery', 'controller' => 'galleries', 'action' => 'index'));
 		}
 		$this->_render['layout'] = 'admin';
@@ -95,7 +95,10 @@ class GalleriesController extends \lithium\action\Controller {
 			$this->request->data['url'] = $this->_generateUrl($document->_id);
 
 			if($document->save($this->request->data)) {
+				FlashMessage::write('The gallery has been successfully updated.', array(), 'default');
 				return $this->redirect(array('admin' => true, 'library' => 'li3b_gallery', 'controller' => 'galleries', 'action' => 'index'));
+			} else {
+				FlashMessage::write('There was a problem updating the gallery, please try again.', array(), 'default');
 			}
 			
 		}
