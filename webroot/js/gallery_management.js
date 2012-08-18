@@ -17,7 +17,7 @@ function addGalleryItem(gallery_id, item_id) {
 			item_title = item_title.substr(0, 27) + '...';
 		}
 		var html = '';
-		html += '<div class="gallery_item" id="gallery_item_' + item_id + '">';
+		html += '<div class="gallery_item thumbnail" id="gallery_item_' + item_id + '">';
 			html += '<div class="gallery_item_image_wrapper">';
 					html += '<div class="gallery_item_image">';
 						// Note: This won't be a resized image. It will be the full size scaled down. Until page refresh.
@@ -31,9 +31,9 @@ function addGalleryItem(gallery_id, item_id) {
 					html += '<h3 id="title_for_' + item_id + '">' + item_title + '</h3>';
 			html += '</div>';
 			html += '<div class="gallery_item_actions">';
-					html += '<a href="#" onClick="removeItemFromGallery(\'' + item_id + '\', \'' + gallery_id + '\'); return false;" class="remove" rel="' + item_id + '" title="Remove from this gallery">Remove</a>';
-					html += '<a href="#" onClick="editGalleryItem(\'' + item_id + '\'); return false;" class="edit" rel="' + item_id + '" title="Edit item information">Edit</a>';
-					html += '<a href="#" onClick="setGalleryCover(\'' + gallery_id + '\', \'' + item_id + '\'); return false;" class="cover" rel="' + item_id + '" title="Set this image as the gallery cover image.">Cover Image</a>';
+					html += '<a href="#" onClick="removeItemFromGallery(\'' + item_id + '\', \'' + gallery_id + '\'); return false;" class="remove" rel="' + item_id + '" title="Remove from this gallery"><i class="icon-remove"></i></a>';
+					html += '<a href="#" onClick="editGalleryItem(\'' + item_id + '\'); return false;" class="edit" rel="' + item_id + '" title="Edit item information"><i class="icon-pencil"></i></a>';
+					html += '<a href="#" onClick="setGalleryCover(\'' + gallery_id + '\', \'' + item_id + '\'); return false;" class="cover" rel="' + item_id + '" title="Set this image as the gallery cover image."><i class="icon-star-empty"></i></a>';
 					// Will come back and add keyword tagging and geo tagging later.
 					// html += '<a href="#" class="tags" rel="' + item_id + '" title="Tags for this item">Tags</a>';
 					// html += '<a href="#" class="location" rel="' + item_id + '" title="Plot this item on a map">Geo</a>';
@@ -171,7 +171,9 @@ function enableSorting(gallery_id) {
 		stop: function(event, ui) {
 			var gallery_order = new Array();
 			$('.gallery_items').children().each(function() {
-				gallery_order.push($(this).attr('id').substr(13));
+				if(typeof($(this).attr('id')) != 'undefined') {
+					gallery_order.push($(this).attr('id').substr(13));
+				}
 			});
 			
 			$.ajax({

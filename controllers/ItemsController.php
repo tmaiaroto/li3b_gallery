@@ -190,42 +190,31 @@ class ItemsController extends \lithium\action\Controller {
 		));
 
 		// Find all items for the current gallery
-		$gallery_items = Item::find('all', array('conditions' => array('_galleries' => $id)));
-
+		$galleryItems = Item::find('all', array('conditions' => array('_galleries' => $id)));
+		$galleryItems = (!empty($galleryItems)) ? $galleryItems->data():array();
+		
 		// Find the gallery document itself
 		$document = Gallery::find('first', array('conditions' => array('_id' => $id)));
 
-		// Order those gallery items based on the gallery document's gallery_item_order field (if set)
-
-		if(isset($document->gallery_item_order) && !empty($document->gallery_item_order)) {
-			// This sort() method is the awesome.
-			$ordering = $document->gallery_item_order->data();
-			// data() must be called so that the iterator loads up all the documents...
-			// Something that has to be fixed I guess. Then data() doesn't need to be called.
-			$gallery_items = $gallery_items->data();
-			
+		// Order those gallery items based on the gallery document's galleryItemOrder field (if set)
+		if(isset($document->galleryItemOrder) && !empty($document->galleryItemOrder)) {
+			$ordering = $document->galleryItemOrder->data();
 			$ordering = array_flip($ordering);
-			foreach ($gallery_items as $key => $item) {
-				if (isset($ordering[$item['_id']])) $gallery_order[$ordering[$item['_id']]] = $item; 
-			}
-			if (isset($gallery_order)) {
-				$gallery_items = $gallery_order;
-				ksort($gallery_items);
-			}
 			
-			/* Need to fix
-			$gallery_items->sort(function($a, $b) use ($ordering) {
-				if($a['_id'] == $b['_id']) {
-					return strcmp($a['_id'], $b['_id']);
+			$orderedItems = false;
+			foreach ($galleryItems as $key => $item) {
+				if (isset($ordering[$item['_id']])) {
+					$orderedItems[$ordering[$item['_id']]] = $item;
+					unset($galleryItems[$key]);
 				}
-				$cmpa = array_search($a['_id'], $ordering);
-				$cmpb = array_search($b['_id'], $ordering);
-				return ($cmpa > $cmpb) ? 1 : -1;
-			});
-			*/
+			}
+			if ($orderedItems) {
+				ksort($orderedItems);
+				$galleryItems = $orderedItems += $galleryItems;
+			}
 		}
 
-		$this->set(compact('document', 'items', 'gallery_items'));
+		$this->set(compact('document', 'items', 'galleryItems'));
 	}	
 	
 	/**
@@ -380,7 +369,7 @@ class ItemsController extends \lithium\action\Controller {
 		if($response['success'] === true) {
 			if(isset($this->request->data['order']) && is_array($this->request->data['order'])) {
 				$response['success'] = Gallery::update(
-					array('$set' => array('gallery_item_order' => $this->request->data['order'])),
+					array('$set' => array('galleryItemOrder' => $this->request->data['order'])),
 					array('_id' => $gallery_id),
 					array('atomic' => false)
 				);
@@ -411,65 +400,6 @@ class ItemsController extends \lithium\action\Controller {
 		
 		return $this->redirect(array('admin' => true, 'library' => 'li3b_gallery', 'controller' => 'galleries', 'action' => 'index'));
 	}
-	
-	/**
-	 * Returns a JSON feed of gallery items.
-	 * 
-	 * @param string $id The gallery id or URL
-	 * @return string The gallery in JSON format
-	*/
-	public function feed($id=null) {
-		$response = array('success' => true);
-				
-		if(empty($id)) {
-			$response['success'] = false;
-		}
-		
-		// Check to ensure that JSON was used to make the POST request
-		if(!$this->request->is('json')) {
-			$response['success'] = false;
-		}
-		
-		if(preg_match('/[0-9a-f]{24}/', $id)) {
-			$field = '_id';
-		} else {
-			$field = 'url';
-		}
-		
-		if($response['success'] === true) {
-			// Find the gallery document itself (by _id or url)
-			$document = Page::find('first', array('conditions' => array($field => $id, 'published' => true)));
-			if(empty($document)) {
-				$response['success'] = false;
-			}
-			
-			if($response['success'] === true) {
-				// Find all items for the current gallery
-				$gallery_items = Item::find('all', array('conditions' => array('_galleries' => (string)$document->_id)));
-				
-				// Order those gallery items based on the gallery document's gallery_item_order field (if set)
-				if(isset($document->gallery_item_order) && !empty($document->gallery_item_order)) {
-					// This sort() method is the awesome.
-					$ordering = $document->gallery_item_order->data();
-					// data() must be called so that the iterator loads up all the documents...
-					// Something that has to be fixed I guess. Then data() doesn't need to be called.
-					$gallery_items->data();
-					$gallery_items->sort(function($a, $b) use ($ordering) {
-						if($a['_id'] == $b['_id']) {
-						  return strcmp($a['_id'], $b['_id']);
-						}
-						$cmpa = array_search($a['_id'], $ordering);
-						$cmpb = array_search($b['_id'], $ordering);
-						return ($cmpa > $cmpb) ? 1 : -1;
-					});
 
-				}
-				$response['gallery'] = $document->data();
-				$response['items'] = $gallery_items->data();
-			}
-		}
-		$this->render(array('json' => $response));
-	}
-	
 }
 ?>

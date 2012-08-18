@@ -11,10 +11,10 @@
 <div class="row">
 <div class="span8 gallery_items" id="gallery_<?=$document['_id']; ?>">
 	<?php
-	if(empty($gallery_items)) {
+	if(empty($galleryItems)) {
 		echo '<p>This gallery has no images.</p>';
 	} else {
-	foreach($gallery_items as $item) {
+	foreach($galleryItems as $item) {
 	?>
 		<div class="gallery_item thumbnail" id="gallery_item_<?=$item['_id']; ?>">
 			<div class="gallery_item_image_wrapper">
@@ -36,12 +36,12 @@
 		?>
 			</div>
 			<div class="gallery_item_actions">
-				<?=$this->html->link('Remove', '#', array('class' => 'icon-remove remove', 'rel' => (string) $item['_id'],  'title' => 'Remove from this gallery')); ?>
-				<?=$this->html->link('Edit', '#', array('class' => 'icon-pencil edit', 'rel' => (string) $item['_id'], 'title' => 'Edit item information')); ?>
+				<?=$this->html->link('<i class="icon-remove"></i>', '#', array('class' => 'remove', 'escape' => false, 'rel' => (string) $item['_id'],  'title' => 'Remove from this gallery')); ?>
+				<?=$this->html->link('<i class="icon-pencil"></i>', '#', array('class' => 'edit', 'escape' => false, 'rel' => (string) $item['_id'], 'title' => 'Edit item information')); ?>
 				<?php
 				$starClass = (isset($document['coverImage']['source']) && $item['source'] == $document['coverImage']['source']) ? 'icon-star':'icon-star-empty';
 				?>
-				<?=$this->html->link('Cover Image', '#', array('class' => $starClass . ' cover', 'rel' => (string) $item['_id'], 'title' => 'Set this image as the gallery cover image.')); ?>
+				<?=$this->html->link('<i class="' . $starClass . '"></i>', '#', array('class' => 'cover', 'escape' => false, 'rel' => (string) $item['_id'], 'title' => 'Set this image as the gallery cover image.')); ?>
 				<?php
 				/* This is GLOBAL visibility... So may want to re-think how "publish" works...
 				 * What if this item was in multiple galleries? But the user only want it temporarily not displayed on the current?

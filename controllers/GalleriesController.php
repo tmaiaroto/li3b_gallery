@@ -87,7 +87,6 @@ class GalleriesController extends \lithium\action\Controller {
 			// IMPORTANT: Use MongoDate() when inside an array/object because $_schema isn't deep
 			$now = new MongoDate();
 			
-			$this->request->data['created'] = $now;
 			$this->request->data['modified'] = $now;
 			
 			// Set the pretty URL that gets used by a lot of front-end actions.
@@ -166,25 +165,25 @@ class GalleriesController extends \lithium\action\Controller {
 			$galleryItems = Item::find('all', array(
 				'conditions' => array('published' => true, '_galleries' => (string)$document->_id)
 			));
+			$galleryItems = (!empty($galleryItems)) ? $galleryItems->data():array();
 
-			// Order those gallery items based on the gallery document's gallery_item_order field (if set)
-			if(isset($document->gallery_item_order) && !empty($document->gallery_item_order)) {
-				// This sort() method is the awesome.
-				$ordering = $document->gallery_item_order->data();
-				// data() must be called so that the iterator loads up all the documents...
-				// Something that has to be fixed I guess. Then data() doesn't need to be called.
-				$galleryItems->data();
-				$galleryItems->sort(function($a, $b) use ($ordering) {
-					if($a['_id'] == $b['_id']) {
-					  return strcmp($a['_id'], $b['_id']);
+			// Order those gallery items based on the gallery document's galleryItemOrder field (if set)
+			if(isset($document->galleryItemOrder) && !empty($document->galleryItemOrder)) {
+				$ordering = $document->galleryItemOrder->data();
+				$ordering = array_flip($ordering);
+
+				$orderedItems = false;
+				foreach ($galleryItems as $key => $item) {
+					if (isset($ordering[$item['_id']])) {
+						$orderedItems[$ordering[$item['_id']]] = $item;
+						unset($galleryItems[$key]);
 					}
-					$cmpa = array_search($a['_id'], $ordering);
-					$cmpb = array_search($b['_id'], $ordering);
-					return ($cmpa > $cmpb) ? 1 : -1;
-				});
+				}
+				if ($orderedItems) {
+					ksort($orderedItems);
+					$galleryItems = $orderedItems += $galleryItems;
+				}
 			}
-
-			$galleryItems = $galleryItems->data();
 
 			foreach($galleryItems as $k => $v) {
 				if($v['service'] == 'mongo') {
@@ -244,26 +243,26 @@ class GalleriesController extends \lithium\action\Controller {
 				$galleryItems = Item::find('all', array(
 					'conditions' => array('published' => true, '_galleries' => (string)$document->_id)
 				));
+				$galleryItems = (!empty($galleryItems)) ? $galleryItems->data():array();
 				
-				// Order those gallery items based on the gallery document's gallery_item_order field (if set)
-				if(isset($document->gallery_item_order) && !empty($document->gallery_item_order)) {
-					// This sort() method is the awesome.
-					$ordering = $document->gallery_item_order->data();
-					// data() must be called so that the iterator loads up all the documents...
-					// Something that has to be fixed I guess. Then data() doesn't need to be called.
-					$galleryItems->data();
-					$galleryItems->sort(function($a, $b) use ($ordering) {
-						if($a['_id'] == $b['_id']) {
-						  return strcmp($a['_id'], $b['_id']);
+				// Order those gallery items based on the gallery document's galleryItemOrder field (if set)
+				if(isset($document->galleryItemOrder) && !empty($document->galleryItemOrder)) {
+					$ordering = $document->galleryItemOrder->data();
+					$ordering = array_flip($ordering);
+
+					$orderedItems = false;
+					foreach ($galleryItems as $key => $item) {
+						if (isset($ordering[$item['_id']])) {
+							$orderedItems[$ordering[$item['_id']]] = $item;
+							unset($galleryItems[$key]);
 						}
-						$cmpa = array_search($a['_id'], $ordering);
-						$cmpb = array_search($b['_id'], $ordering);
-						return ($cmpa > $cmpb) ? 1 : -1;
-					});
+					}
+					if ($orderedItems) {
+						ksort($orderedItems);
+						$galleryItems = $orderedItems += $galleryItems;
+					}
 				}
 				
-				$galleryItems = $galleryItems->data();
-
 				foreach($galleryItems as $k => $v) {
 					if($v['service'] == 'mongo') {
 						unset($galleryItems[$k]['service']);

@@ -129,15 +129,14 @@ div.modal_input.inline label {
 	display:block;
 }
 .gallery_item .gallery_item_actions a {
-	height: 12px;
 	text-decoration: none;
-	text-indent: -2000px;
-	padding: 0;
-	margin: 0;
-	display: block;
-	overflow: hidden;
-	float: left;
+	color: #000;
 	margin-right: 4px;
+	float: left;
+	display: block;
+}
+.gallery_item .gallery_item_actions a:hover {
+	color: #bd1515;
 }
 
 /* Unassociated Gallery Items */
