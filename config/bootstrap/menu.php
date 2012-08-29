@@ -1,9 +1,9 @@
 <?php
 use li3b_core\models\BootstrapMenu as Menu;
 
-Menu::applyFilter('static_menu',  function($self, $params, $chain) {
+Menu::applyFilter('staticMenu',  function($self, $params, $chain) {
 	if($params['name'] == 'admin') {
-		$self::$static_menus['admin']['xgalleries'] = array(
+		$self::$staticMenus['admin']['xgalleries'] = array(
 			'title' => 'Galleries <b class="caret"></b>',
 			'url' => '#',
 			'activeIf' => array('library' => 'li3b_gallery', 'controller' => 'galleries'),
