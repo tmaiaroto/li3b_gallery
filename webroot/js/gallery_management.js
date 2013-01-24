@@ -11,7 +11,7 @@ function addGalleryItem(gallery_id, item_id) {
 	}
 	
 	$.get('/admin/plugin/li3b_gallery/items/meta/' + item_id + '.json', function(data) {
-		console.dir(data.data);
+		// console.dir(data.data);
 		var item_title = data.data['title'];
 		if(item_title.length > 27) {
 			item_title = item_title.substr(0, 27) + '...';

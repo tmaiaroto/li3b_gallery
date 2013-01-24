@@ -2,13 +2,13 @@
 namespace li3b_gallery\models;
 
 class Item extends \lithium\data\Model {
-	
+
 	protected $_meta = array(
 		'source' => 'li3b_gallery.items',
 		'locked' => true,
 		'connection' => 'li3b_mongodb'
 	);
-	
+
 	protected $_schema = array(
 	'_id' => array('type' => 'id', 'form' => array('type' => 'hidden', 'label' => false)),
 		'title' => array('type' => 'string'),
@@ -32,18 +32,18 @@ class Item extends \lithium\data\Model {
 		'modified' => array('type' => 'date', 'form' => array('type' => 'hidden', 'label' => false)),
 		'published' => array('type' => 'boolean')
 	);
-	
+
 	public $url_separator = '-';
-	
+
 	public $search_schema = array(
 		'title' => array(
 			'weight' => 1
 		)
 	);
-	
+
 	/**
 	 * Returns the search schema for the model.
-	 * 
+	 *
 	 * @param array Optional new search schema values
 	 * @return array
 	*/
