@@ -93,8 +93,18 @@ class ItemsController extends \lithium\action\Controller {
 							// Also, 'file_name' was redundant. 'filename' is now: hostname + UUID + extension. This allows "duplicate" files.
 							// So if user A uploads "image.jpg" and user B also uploads another "image.jpg" even though they are different
 							// (or even exactly the same)...They are two entries in GridFs.
-							$gridFile = Asset::create(array('file' => $file['tmp_name'], 'filename' => (string)uniqid(php_uname('n') . '.') . '.'.$ext, 'fileExt' => $ext));
-							$gridFile->save();
+							// $gridFile = Asset::create(array('file' => $file['tmp_name'], 'filename' => (string)uniqid(php_uname('n') . '.') . '.'.$ext, 'fileExt' => $ext));
+							// $gridFile->save();
+							// Lithium isn't saving these properly in gridfs. At least I don't think.
+
+							// Make a new store() method and use that instead. Works much like PHP driver. Filename first, then metadata.
+							$gridFileId = Asset::store(
+								$file['tmp_name'],
+								array(
+									'filename' => (string)uniqid(php_uname('n') . '.') . '.'.$ext,
+									'fileExt' => $ext
+								)
+							);
 						break;
 						default:
 							//exit();
@@ -103,14 +113,16 @@ class ItemsController extends \lithium\action\Controller {
 				}
 
 				// If file saved, save item
-				if ($gridFile->_id) {
+				// if ($gridFile->_id) {
+				if ($gridFileId) {
 					// Create an Item object
 					$id = new MongoId();
 					$title = trim(str_replace(array('-', '_', '.'.$ext), array(' ', ' ', '', ''), $file['name']));
 
 					// TODO: If files were saved to disk, this would be the full path on disk.
 					// If files were saved in S3, it would be a path on S3, etc.
-					$source = (string)$gridFile->_id . '.' . $ext;
+					// $source = (string)$gridFile->_id . '.' . $ext;
+					$source = (string)$gridFileId . '.' . $ext;
 
 					$service = 'mongo';
 

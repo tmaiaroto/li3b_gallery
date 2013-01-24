@@ -16,42 +16,42 @@ use \SplFileInfo;
 use \stdClass;
 
 class Thumbnail extends \lithium\core\StaticObject {
-	
+
 	/**
 	 * Holds the options passed to create() for other methods to use.
-	 * 
-	 * @var array 
+	 *
+	 * @var array
 	 */
 	static $_options = array();
-	
+
 	/**
 	 * Holds all sorts of information about the image that's being used
 	 * to generate the thumbnail.
-	 * 
+	 *
 	 * @var array
 	 */
 	static $_image;
-	
+
 	/**
 	 * Holds a copy of the "source" image.
 	 * This could be a path, a MongoId, etc.
-	 * 
+	 *
 	 * @var mixed
 	 */
 	static $_source;
-	
+
 	/**
 	 * Holds information about the destination for the
 	 * generated thumbnail image. This is where it may
 	 * be saved to on disk or in MongoDB.
-	 * 
+	 *
 	 * @var mixed
 	 */
 	static $_destination;
-	
+
 	/**
 	 * Creates a thumbnail.
-	 * 
+	 *
 	 * Options are as follows:
 	 * `size` - The size in x, y
 	 * `quality` - The image quality if applicable (jpg, png have quality settings)
@@ -60,7 +60,7 @@ class Thumbnail extends \lithium\core\StaticObject {
 	 * `forceLetterBoxColor` - Forces the letterbox color for transparent images (ie. if an image has a giant hole in the center, you'd see the letterbox color behind it this way)
 	 * `sharpen` - Whether or sharpen or not (makes smaller images look better)
 	 * `cache` - Ignore cache if set to false, otherwise new images won't be created it not necessary
-	 * 
+	 *
 	 * @param type $source
 	 * @param type $options
 	 * @return array The path and mime-type.
@@ -76,24 +76,24 @@ class Thumbnail extends \lithium\core\StaticObject {
 			'cache' => true
 		);
 		$options += $defaults;
-		
+
 		$options['letterbox'] = is_string($options['letterbox']) ? static::_html2rgb($options['letterbox']):$options['letterbox'];
-		
+
 		// If realpath() isn't used to pass the image, and it's just a part of the route to the image.
 		if(is_string($source) && substr($source, 0, 8) == '/li3b_gallery') {
 			$source = LITHIUM_APP_PATH . '/libraries/li3b_gallery/webroot' . substr($source, 8);
 		}
-		
+
 		// Round the thumbnail quality in case a decimal was provided.
 		$options['quality'] = ceil($options['quality']);
 		// ...Or if a value was entered beyond the extremes.
-		if($options['quality'] > 100) { 
-			$options['quality'] = 100; 
+		if($options['quality'] > 100) {
+			$options['quality'] = 100;
 		}
-		if($options['quality'] < 0) { 
-			$options['quality'] = 0; 
+		if($options['quality'] < 0) {
+			$options['quality'] = 0;
 		}
-		
+
 		// Ensure size is x, y. It doesn't need to be passed as a keyed array.
 		// But we want to make sure it is a keyed array to make things easier.
 		list($width, $height) = $options['size'];
@@ -104,19 +104,19 @@ class Thumbnail extends \lithium\core\StaticObject {
 		// Set this orginally request size, because 'size' will change based
 		// on various calculations.
 		$options['originalSize'] = $options['size'];
-		
+
 		static::$_image = new stdClass();
-		
+
 		// Get the extension from the source, if possible.
 		// NOTE: If the image is coming from GridFS, this will be set in _createFromAssetId()
 		if(is_string($source) && preg_match('/([^\.]+$)/i', $source, $matches)) {
 			static::$_image->ext = strtolower($matches[0]);
 		}
-		
+
 		static::$_options = $options;
 		static::$_source = $source;
 		static::$_destination = $destination;
-		
+
 		// Need to detect the source.
 		// It could be a local file on disk, it could be a remote image from another site, it could be an image stored in S3, Mongo GridFS, or ...
 		switch(true) {
@@ -131,20 +131,20 @@ class Thumbnail extends \lithium\core\StaticObject {
 				static::$_image->filename = $sourceInfo->getFilename();
 				static::$_image->lastModified = $sourceInfo->getMTime();
 				static::$_image->sourceId = hash('md5', $source);
-				
+
 				static::_setDestination();
 				static::_setMimeType();
-				
+
 				// TODO: Take into consideration other destinations.
 				// Also in the _setDestination() method.
-				// So images can be created and stored to MongoDB, etc. 
+				// So images can be created and stored to MongoDB, etc.
 				// for caching as well. Not just the current server's local disk.
-				
+
 				// Return the file if cache was set to true and it has been created before (and is current).
 				if($options['cache'] && $cacheImage = static::_getCache()) {
 					return array('path' => $cacheImage, 'mimeType' => static::$_image->mimeType);
 				}
-				
+
 				static::_createFromDisk();
 			break;
 			case ($source instanceof MongoGridFSFile):
@@ -152,14 +152,15 @@ class Thumbnail extends \lithium\core\StaticObject {
 				static::$_image->filename = $source->file['filename'];
 				static::$_image->lastModified = strtotime($source->file['uploadDate']);
 				static::$_image->sourceId = hash('md5', (string)$source->file['_id']);
-				
+				static::$_source = $source;
+
 				static::_setDestination();
 				static::_setMimeType();
-				
+
 				if($options['cache'] && $cacheImage = static::_getCache()) {
 					return array('path' => $cacheImage, 'mimeType' => static::$_image->mimeType);
 				}
-				
+
 				static::_createFromBytes();
 			break;
 			case ($source instanceof MongoId):
@@ -172,15 +173,15 @@ class Thumbnail extends \lithium\core\StaticObject {
 				static::$_image->lastModified = $asset->uploadDate;
 				static::$_image->sourceId = hash('md5', (string)$source->_id);
 				static::$_source = $asset->file;
-				
+
 				static::_setDestination();
 				static::_setMimeType();
-				
+
 				// Return the file if cache was set to true and it has been created before (and is current).
 				if($options['cache'] && $cacheImage = static::_getCache()) {
 					return array('path' => $cacheImage, 'mimeType' => static::$_image->mimeType);
 				}
-				
+
 				static::_createFromBytes();
 			break;
 			case ((substr($source, 0, 7) == 'http://') || (substr($source, 0, 8) == 'https://')):
@@ -188,7 +189,7 @@ class Thumbnail extends \lithium\core\StaticObject {
 				// TODO: Re-arrange code to make it one HTTP request...Low priority right now.
 				// The headers should give us all we need to know about the image.
 				$headers = get_headers($source, 1);
-				
+
 				$contentType = isset($headers['Content-Type']) ? $headers['Content-Type']:null;
 				switch($contentType) {
 					// Guess by default...
@@ -203,34 +204,33 @@ class Thumbnail extends \lithium\core\StaticObject {
 						static::$_image->ext = 'gif';
 					break;
 				}
-				
-				// This will be the destination filename. Also used to check cache. 
+
+				// This will be the destination filename. Also used to check cache.
 				// So let's simply hash the URL to generate the name.
 				// Don't forget to re-add the extension.
 				$sourceHash = hash('md5', $source);
 				static::$_image->filename = $sourceHash . '.' . static::$_image->ext;
 				static::$_image->lastModified = (isset($headers['Last-Modified'])) ? strtotime($headers['Last-Modified']):time();
 				static::$_image->sourceId = $sourceHash;
-				
 				static::_setDestination();
 				static::_setMimeType();
-				
+
 				// Return the file if cache was set to true and it has been created before (and is current).
 				if($options['cache'] && $cacheImage = static::_getCache()) {
 					return array('path' => $cacheImage, 'mimeType' => static::$_image->mimeType);
 				}
-				
+
 				static::_createFromUrl();
 			break;
 		}
-		
+
 		switch(true) {
 			// Returns the image directly to the browser.
 			// Probably want to use this method via some sort of helper.
 			default:
 			case (empty(static::$_destination)):
 				static::$_destination = null;
-				
+
 				switch(static::$_image->ext) {
 					case 'png':
 						if(static::$_options['quality'] != 0) {
@@ -273,7 +273,7 @@ class Thumbnail extends \lithium\core\StaticObject {
 			case (is_string(static::$_destination) && file_exists(static::$_destination) && is_writable(static::$_destination)):
 				// Append the file name to the destination FIRST. It's used by _setCache().
 				static::$_destination = static::$_destination . '/' . static::$_image->filename;
-				
+
 				static::_setCache();
 				return array('path' => static::$_destination, 'mimeType' => static::$_image->mimeType);
 			break;
@@ -287,39 +287,39 @@ class Thumbnail extends \lithium\core\StaticObject {
 			break;
 		}
 	}
-	
+
 	/**
 	 * Removes the cached images.
 	 * This is useful for cleaning up a system.
 	 * Images can be removed from all or specific cache sources either
 	 * individually or completely.
-	 * 
+	 *
 	 * By default, if no options are passed, everything will be removed.
-	 * 
+	 *
 	 * Note: Cached images on disk can be stored in a variety of places and
 	 * this class does not choose that location nor has a default. So to remove
 	 * cached images on disk, a path must ALWAYS be provided in `source` and
 	 * note that only directories under the LITHIUM_APP_PATH are considered.
 	 * LITHIUM_APP_PATH is always prefixed on to the source. If images were
-	 * stored elsewhere (a NAS or something) they will need to be manually 
+	 * stored elsewhere (a NAS or something) they will need to be manually
 	 * removed OR a symlink should be setup within the application path that
 	 * points to the NAS.
-	 * 
+	 *
 	 * WARNING: The `source` option provides the directory. BE CAREFUL.
 	 * Entire directories can be removed (provided there is filesystem permission).
-	 * 
+	 *
 	 * The `reference` option should be a MongoId or a file name.
 	 * If it's a file name, then that file will be removed under the `source`
 	 * directory. If not provided, the entire `source` directory will be removed.
-	 * 
+	 *
 	 * So to remove all 50x50 thumbnail images, for example, there would be no
 	 * `reference` passed. It would just be the `source` which pointed to the
 	 * directory on disk that held the 50x50 images. NOT taking into consideration
 	 * the app path. So for example: "/webroot/img/_thumbnails/50x50"
-	 * 
+	 *
 	 * The `olderThan` option is a strtotime() compatible string.
-	 * 
-	 * @param array $options 
+	 *
+	 * @param array $options
 	 * @return boolean
 	 */
 	public static function clearCache(array $options = array()) {
@@ -329,7 +329,7 @@ class Thumbnail extends \lithium\core\StaticObject {
 			'olderThan' => false
 		);
 		$options += $defaults;
-		
+
 		$olderThan = is_string($options['olderThan']) ? new MongoDate(strtotime($options['olderThan'])):false;
 		$reference = ($options['reference'] instanceof MongoId) ? hash('md5', (string)$options['reference']):$options['reference'];
 		switch(true) {
@@ -342,16 +342,16 @@ class Thumbnail extends \lithium\core\StaticObject {
 				$source = LITHIUM_APP_PATH . $source;
 			break;
 		}
-		
+
 		// Note: There is currently no support for Amazon S3 here...Not that there is anywhere else yet either.
 		// But if used, it needs to be worked in here below.
-		
+
 		if($source == 'mongo') {
 			// Remove all image cache files from MongoDB.
 			$conditions = array(
 				'_thumbnail' => true
 			);
-			
+
 			if($olderThan) {
 				$conditions['$lt'] = array('uploadDate' => $olderThan);
 			}
@@ -376,13 +376,13 @@ class Thumbnail extends \lithium\core\StaticObject {
 				}
 			}
 		}
-		
+
 		return false;
 	}
-	
+
 	/**
 	 * Creates the image from a MongoDB GridFS file.
-	 *  
+	 *
 	 */
 	private static function _createFromBytes() {
 		$tmpfname = tempnam(sys_get_temp_dir(), "img");
@@ -390,28 +390,28 @@ class Thumbnail extends \lithium\core\StaticObject {
 		fwrite($handle, static::$_source->getBytes());
 		fclose($handle);
 		static::$_source = $tmpfname;
-		
+
 		list($width, $height) = getimagesize(static::$_source);
 		static::$_image->width = $width;
 		static::$_image->height = $height;
-		
+
 		static::_generateImage();
-		
+
 		unlink($tmpfname);
 	}
-	
+
 	/**
-	 * Creates the image from a file on disk. 
+	 * Creates the image from a file on disk.
 	 */
 	private static function _createFromDisk() {
 		// Get source image dimensions
 		list($width, $height) = getimagesize(static::$_source);
 		static::$_image->width = $width;
 		static::$_image->height = $height;
-		
+
 		$newImage = static::_generateImage();
 	}
-	
+
 	/**
 	 * Creates the image from a remote image on another site.
 	 */
@@ -421,16 +421,16 @@ class Thumbnail extends \lithium\core\StaticObject {
 		fwrite($handle, file_get_contents(static::$_source));
 		fclose($handle);
 		static::$_source = $tmpfname;
-		
+
 		list($width, $height) = getimagesize(static::$_source);
 		static::$_image->width = $width;
 		static::$_image->height = $height;
-		
+
 		static::_generateImage();
-		
+
 		unlink($tmpfname);
 	}
-	
+
 	/**
 	 * Process the image
 	 *
@@ -442,21 +442,21 @@ class Thumbnail extends \lithium\core\StaticObject {
 		$x = NULL;
 		$y = NULL;
 		$dx = $dy = 0;
-		
+
 		// The crop option may have been passed as true, but check to see if a crop is even necessary.
 		if((static::$_options['size']['x'] > static::$_image->width) && (static::$_options['size']['y'] > static::$_image->height)) {
 			static::$_options['crop'] = false;
 		}
-		
+
 		// don't allow new width or height to be greater than the original
-		if(static::$_options['size']['x'] > static::$_image->width) { 
+		if(static::$_options['size']['x'] > static::$_image->width) {
 			static::$_options['size']['x'] = static::$_image->width;
 		}
-		
+
 		if(static::$_options['size']['y'] > static::$_image->height) {
 			static::$_options['size']['y'] = static::$_image->height;
 		}
-		
+
 		// generate new w/h if not provided (cool, idiot proofing)
 		if(static::$_options['size']['x'] && !static::$_options['size']['y']) {
 			static::$_options['size']['y'] = static::$_image->height * ( static::$_options['size']['x'] / static::$_image->width );
@@ -466,13 +466,13 @@ class Thumbnail extends \lithium\core\StaticObject {
 			static::$_options['size']['x'] = static::$_image->width;
 			static::$_options['size']['y'] = static::$_image->height;
 		}
-		
+
 		// set some default values for other variables we set differently based on options like letterboxing, etc.
 		$newWidth = static::$_options['size']['x'];
 		$newHeight = static::$_options['size']['y'];
 		$xCenter = ceil($newWidth/2); //horizontal middle // TODO: possibly add options to change where the crop is from
 		$yCenter = ceil($newHeight/2); //vertical middle
-		
+
 		// If the thumbnail is going to be square and we're cropping (otherwise it won't just be square, but it'll be cropped too if the source isn't already a square image)
 		if(static::$_options['size']['x'] == static::$_options['size']['y'] && static::$_options['crop'] === true) {
 			if(static::$_image->width > static::$_image->height) {
@@ -511,7 +511,7 @@ class Thumbnail extends \lithium\core\StaticObject {
 				$yCenter = ceil($newHeight/2); //vertical middle
 			}
 		}
-		
+
 		// CREATE THE NEW THUMBNAIL IMAGE, by taking the source and applying transformations to it.
 		switch(static::$_image->ext) {
 			case 'jpg':
@@ -521,7 +521,7 @@ class Thumbnail extends \lithium\core\StaticObject {
 			case 'png':
 				$im = imagecreatefrompng(static::$_source);
 			break;
-			case 'gif': 
+			case 'gif':
 				$im = imagecreatefromgif(static::$_source);
 			break;
 			default:
@@ -529,7 +529,7 @@ class Thumbnail extends \lithium\core\StaticObject {
 				return false;
 			break;
 		}
-		
+
 		if(!empty(static::$_options['letterbox'])) {
 			// if letterbox, use the originally passed dimensions (keeping the final image size to whatever was requested, fitting the other image inside this box)
 			$newImage = ImageCreatetruecolor(static::$_options['originalSize']['x'], static::$_options['originalSize']['y']);
@@ -545,7 +545,7 @@ class Thumbnail extends \lithium\core\StaticObject {
 		if(static::$_options['crop'] === true) {
 			$croppedImage = imagecreatetruecolor(round($newWidth), round($newHeight));
 		}
-		
+
 		// If PNG or GIF, handle the transparency.
 		if((static::$_image->ext == 'png') || (static::$_image->ext == 'gif')) {
 			$trnprtIndx = imagecolortransparent($im);
@@ -564,7 +564,7 @@ class Thumbnail extends \lithium\core\StaticObject {
 					// ...a png may, instead, have an alpha channel that determines its translucency
 
 					// Fill the (currently empty) new cropped image with a transparent background
-					if($croppedImage) { 
+					if($croppedImage) {
 						$transparentIndex = imagecolortransparent($croppedImage); // allocate
 						//imagepalettecopy($im, $croppedImage); // Don't need to copy the pallette
 						imagefill($croppedImage, 0, 0, $transparentIndex);
@@ -573,26 +573,26 @@ class Thumbnail extends \lithium\core\StaticObject {
 					}
 
 					// Fill the new image with a transparent background
-					imagealphablending($newImage, false); 
+					imagealphablending($newImage, false);
 					// Create/allocate a new transparent color for image
 					$trnprtIndx = imagecolorallocatealpha($newImage, 0, 0, 0, 127); // $trnprtIndx = imagecolortransparent($newImage, imagecolorallocatealpha($newImage, 0, 0, 0, 127)); // seems to be no difference, but why call an extra function?
 					imagefill($newImage, 0, 0, $trnprtIndx); // Completely fill the background of the new image with allocated color.
 					imagesavealpha($newImage, true);  // Restore transparency blending
 				}
 		}
-		
+
 		// PNG AND GIF can have transparent letterbox and that area needs to be filled too (it already is though if it's transparent)
 		if(!empty(static::$_options['letterbox'])) {
 			$backgroundColor = imagecolorallocate($newImage, 255, 255, 255); // default white
 			if((is_array(static::$_options['letterbox'])) && (count(static::$_options['letterbox']) == 3)) {
 				$backgroundColor = imagecolorallocate($newImage, static::$_options['letterbox'][0], static::$_options['letterbox'][1], static::$_options['letterbox'][2]);
 			}
-			
+
 			// Transparent images like png and gif will show the letterbox color in their transparent areas so it will look weird
 			if((static::$_image->ext == 'gif') || (static::$_image->ext == 'png')) {
-				// But we will give the user a choice, forcing letterbox will effectively "flood" the background with that color. 
+				// But we will give the user a choice, forcing letterbox will effectively "flood" the background with that color.
 				if(static::$_options['forceLetterboxColor'] === true) {
-					imagealphablending($newImage, true); 
+					imagealphablending($newImage, true);
 					if($croppedImage) { imagefill($croppedImage, 0, 0, $backgroundColor); }
 				} else {
 					// If the user doesn't force letterboxing color on gif and png, make it transaprent ($trnprtIndx from above)
@@ -601,12 +601,12 @@ class Thumbnail extends \lithium\core\StaticObject {
 			}
 			imagefill($newImage, 0, 0, $backgroundColor);
 		}
-		
+
 		// If cropping, we have to set some coordinates
-		if(static::$_options['crop'] === true) {			
+		if(static::$_options['crop'] === true) {
 			imagecopyresampled($croppedImage, $im, 0, 0, 0, 0, $newWidth, $newHeight, static::$_image->width, static::$_image->height);
 			// if letterbox we may have to set some coordinates as well depending on the image dimensions ($dx, $dy) unless its letterbox style
-			if(empty(static::$_options['letterbox'])) {			
+			if(empty(static::$_options['letterbox'])) {
 				imagecopyresampled($newImage, $croppedImage, 0, 0, ($xCenter-(static::$_options['size']['x']/2)), ($yCenter-(static::$_options['size']['y']/2)), static::$_options['size']['x'], static::$_options['size']['y'], static::$_options['size']['x'], static::$_options['size']['y']);
 			} else {
 				imagecopyresampled($newImage, $croppedImage,$dx,$dy, ($xCenter-(static::$_options['size']['x']/2)), ($yCenter-(static::$_options['size']['y']/2)), static::$_options['size']['x'], static::$_options['size']['y'], static::$_options['size']['x'], static::$_options['size']['y']);
@@ -614,7 +614,7 @@ class Thumbnail extends \lithium\core\StaticObject {
 		} else {
 			imagecopyresampled($newImage,$im,$dx,$dy,$x,$y,static::$_options['size']['x'],static::$_options['size']['y'],static::$_image->width,static::$_image->height);
 		}
-			
+
 		// SHARPEN (optional) -- can't sharpen transparent/translucent PNG
 		if((static::$_options['sharpen'] === true) && (static::$_image->ext != 'png') && (static::$_image->ext != 'gif')) {
 				$sharpness = static::_findSharp(static::$_image->width, static::$_options['size']['x']);
@@ -627,16 +627,16 @@ class Thumbnail extends \lithium\core\StaticObject {
 				$offset = 0;
 				imageconvolution($newImage, $sharpenMatrix, $divisor, $offset);
 		}
-		
+
 		static::$_image->resource = $newImage;
 		return true;
 	}
-	
+
 	/**
 	* Computes for sharpening the image.
 	*
 	* function from Ryan Rud (http://adryrun.com)
-	*/ 
+	*/
 	private static function _findSharp($orig, $final) {
 		$final = $final * (750.0 / $orig);
 		$a = 52;
@@ -645,7 +645,7 @@ class Thumbnail extends \lithium\core\StaticObject {
 		$result = $a + $b * $final + $c * $final * $final;
 		return max(round($result), 0);
 	}
-	
+
 	/**
 	 * Converts web hex value into rgb array.
 	 *
@@ -664,12 +664,11 @@ class Thumbnail extends \lithium\core\StaticObject {
 		$r = hexdec($r); $g = hexdec($g); $b = hexdec($b);
 		return array($r, $g, $b);
 	}
-	
-	
+
 	/**
 	 * Pass a full path like /var/www/htdocs/site/webroot/files
 	 * Don't include trailing slash.
-	 * 
+	 *
 	 * @param $path String[optional]
 	 * @return String Path.
 	 */
@@ -736,11 +735,11 @@ class Thumbnail extends \lithium\core\StaticObject {
 			break;
 		}
 	}
-	
+
 	/**
 	 * Sets the mime-type. Useful for the Response class.
 	 * This will get returned from the Thumbnail::create() method.
-	 * 
+	 *
 	 */
 	private static function _setMimeType() {
 		// Set the mime type in case we are directly returning the new thumbnail image.
@@ -758,24 +757,23 @@ class Thumbnail extends \lithium\core\StaticObject {
 			break;
 		}
 	}
-	
+
 	/**
 	 * Checks if a cached version of the image already exists and is usable.
 	 * By usable, we mean if it's not stale. If the source image has updated
 	 * since the cache image was created, it is not usable.
-	 * 
+	 *
 	 * If there is a usable cache image, it will be returned, otherwise
 	 * false will be returned and the new image will be generated.
-	 * 
+	 *
 	 * This method will also clean up stale cache files/documents.
-	 * 
+	 *
 	 * @return mixed
 	 */
 	private static function _getCache() {
 		if(empty(static::$_destination)) {
 			return false;
 		}
-		
 		// Return the route path (which renders an image from grid.fs) if cached exists in MongoDB.
 		if(static::$_destination == 'mongo') {
 			$thumbSizeAsString = static::$_options['size']['x'] . 'x' . static::$_options['size']['y'];
@@ -784,7 +782,7 @@ class Thumbnail extends \lithium\core\StaticObject {
 				return '/li3b_gallery/images/' . $image->_id . '.' . $image->fileExt;
 			}
 		}
-		
+
 		// Return the file path if cached exists on disk.
 		if(file_exists(static::$_destination . '/' . static::$_image->filename)) {
 			// And the generated thumbnail is newer than the source image...
@@ -793,14 +791,14 @@ class Thumbnail extends \lithium\core\StaticObject {
 				return static::$_destination . '/' . static::$_image->filename;
 			}
 		}
-				
+
 		return false;
 	}
-	
+
 	/**
 	 * Sets the cache by saving the image.
 	 * It may save to disk or in MongoDB or elsewhere.
-	 * 
+	 *
 	 * @return boolean If the image was saved somewhere or not
 	 */
 	private static function _setCache() {
@@ -808,7 +806,7 @@ class Thumbnail extends \lithium\core\StaticObject {
 		if(static::$_destination == 'mongo') {
 			static::$_destination = null;
 		}
-		
+
 		// If the destination is null then $image will be the stream.
 		// If it was a path on disk, the image will be saved.
 		$imageStream = false;
@@ -847,21 +845,29 @@ class Thumbnail extends \lithium\core\StaticObject {
 				return false;
 			break;
 		}
-		
+
 		//
 		if($imageStream) {
-			// Note: Again, remember that static::$_image->width can change if needed. 
+			// Note: Again, remember that static::$_image->width can change if needed.
 			// The $_options holds the original size request. Use those.
 			$thumbSizeAsString = static::$_options['size']['x'] . 'x' . static::$_options['size']['y'];
-			
+
 			// First, remove any other images to keep things tidy.
 			// Remember, if this method is even called, it means the cache does
 			// not exist or it's stale.
+			/*
 			Asset::remove(array(
 				'_thumbnail' => true,
 				'filename' => sys_get_temp_dir() . '/' . static::$_image->sourceId . '_' . $thumbSizeAsString
 			));
-			
+			*/
+			// Use this instead for now...I'm not sure the above removes from chunks.
+			$db = Asset::connection();
+			$db->connection->getGridFs()->remove(array(
+				'_thumbnail' => true,
+				'filename' => sys_get_temp_dir() . '/' . static::$_image->sourceId . '_' . $thumbSizeAsString
+			));
+
 			// MongoDB class wants to save an image off something on disk.
 			// The image stream COULD be written directly, it does work...
 			// But an error message comes up because it expects a path instead.
@@ -873,7 +879,8 @@ class Thumbnail extends \lithium\core\StaticObject {
 			$handle = fopen($tmpfname, 'w');
 			fwrite($handle, $imageStream);
 			fclose($handle);
-			
+
+			/*
 			$gridFile = Asset::create(array(
 				'file' => $tmpfname,
 				'fileExt' => static::$_image->ext,
@@ -883,20 +890,35 @@ class Thumbnail extends \lithium\core\StaticObject {
 				'_thumbnail' => true
 			));
 			$saved = $gridFile->save();
-			
+			*/
+
+			// NOTE: Use the new store() method... It seems to be more reliable.
+			$gridFileId = Asset::store(
+				$tmpfname,
+				array(
+					'fileExt' => static::$_image->ext,
+					'ref' => static::$_image->sourceId,
+					'_thumbnail' => true
+				)
+			);
+
 			// Remove the temp file after we no longer need it.
 			unlink($tmpfname);
-			
+
 			// Set the destination so we we can use the newly created cache image.
 			// NOTE: If routes.php changes, this will need to as well.
-			static::$_destination = '/li3b_gallery/images/' . (string)$gridFile->_id . '.' . static::$_image->ext;
-			
-			return $saved;
+			// static::$_destination = '/li3b_gallery/images/' . (string)$gridFile->_id . '.' . static::$_image->ext;
+			static::$_destination = '/li3b_gallery/images/' . (string)$gridFileId . '.' . static::$_image->ext;
+
+			if($gridFileId) {
+				return true;
+			}
+			//return $saved;
 		}
-		
+
 		// If it hasn't returned false yet, it should have succeeded in saving to disk.
 		return true;
 	}
-	
+
 }
 ?>

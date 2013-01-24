@@ -34,33 +34,34 @@ Router::connect('/li3b_gallery/images/{:width:[0-9]+}/{:height:[0-9]+}/{:args}.(
 		header("HTTP/1.0 404 Not Found");
 		die;
 	}
-	
+
 	$width = isset($request->params['width']) ? (int)$request->params['width']:100;
 	$height = isset($request->params['height']) ? (int)$request->params['height']:100;
-	
+
 	$options = array(
 		'size' => array($width, $height),
 		'ext' => $image->fileExt
 	);
+
 	$options['letterbox'] = isset($request->query['letterbox']) ? $request->query['letterbox']:null;
 	$options['forceLetterboxColor'] = isset($request->query['forceLetterboxColor']) ? (bool)$request->query['forceLetterboxColor']:false;
 	$options['crop'] = isset($request->query['crop']) ? (bool)$request->query['crop']:false;
 	$options['sharpen'] = isset($request->query['sharpen']) ? (bool)$request->query['sharpen']:false;
 	$options['quality'] = isset($request->query['quality']) ? (int)$request->query['quality']:85;
-	
+
 	// EXAMPLE REMOTE IMAGE with local disk cache and database cache.
 	//$image = 'http://oddanimals.com/images/lime-cat.jpg';
 	//$file = Thumbnail::create($image, LITHIUM_APP_PATH . '/webroot/img/_thumbnails', $options);
 	//$file = Thumbnail::create($image, 'grid.fs', $options);
-	
+
 	// EXAMPLE IMAGE FROM DISK with local disk cache and database cache.
 	//$file = Thumbnail::create(LITHIUM_APP_PATH . '/webroot/img/glyphicons-halflings.png', LITHIUM_APP_PATH . '/webroot/img/_thumbnails', $options);
 	//$file = Thumbnail::create(LITHIUM_APP_PATH . '/webroot/img/glyphicons-halflings.png', 'grid.fs', $options);
-	
+
 	// EXAMPLE IMAGE FROM MONGODB with local disk cache and database cache.
 	//$file = Thumbnail::create($image->file, LITHIUM_APP_PATH . '/webroot/img/_thumbnails', $options);
+
 	$file = Thumbnail::create($image->file, 'grid.fs', $options);
-	
 	// The path will be a path on disk for a route if the destination was a cache in MonoDB.
 	// Handle both.
 	if(file_exists($file['path'])) {
@@ -69,12 +70,12 @@ Router::connect('/li3b_gallery/images/{:width:[0-9]+}/{:height:[0-9]+}/{:args}.(
 			'body' => file_get_contents($file['path'])
 		));
 	}
-	
+
 	// Technically, a redirect.
 	return new Response(array(
 		'location' => $file['path']
 	));
-	
+
 });
 
 // Route for images stored in GridFS.
@@ -86,7 +87,7 @@ Router::connect('/li3b_gallery/images/{:args}.(jpe?g|png|gif)', array(), functio
 		header("HTTP/1.0 404 Not Found");
 		die;
 	}
-	
+
 	return new Response(array(
 		'headers' => array('Content-type' => $image->contentType),
 		'body' => $image->file->getBytes()

@@ -47,6 +47,44 @@ class Asset extends \lithium\data\Model {
 			parent::__init();
 		}
 	}
+
+	/**
+	 * Stores in GridFS.
+	 * Call this insetad of save()
+	 *
+	 * @return mixed False on fail, ObjectId on success
+	 */
+	public static function store($filename=false, $metadata=array()) {
+		if(!$filename) {
+			return false;
+		}
+
+		$ext = isset($metadata['fileExt']) ? strtolower($metadata['fileExt']):null;
+		switch($ext) {
+			default:
+				$mimeType = 'text/plain';
+			break;
+			case 'jpg':
+			case 'jpeg':
+				$mimeType = 'image/jpeg';
+			break;
+			case 'png':
+				$mimeType = 'image/png';
+			break;
+			case 'gif':
+				$mimeType = 'image/gif';
+			break;
+		}
+		$metadata['contentType'] = $mimeType;
+
+		if(file_exists($filename)) {
+			$db = self::connection();
+			$grid = $db->connection->getGridFS();
+			return $grid->storeFile($filename, $metadata);
+		}
+
+		return false;
+	}
 }
 
 /* FILTERS
