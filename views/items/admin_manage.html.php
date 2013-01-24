@@ -19,7 +19,7 @@
 		<div class="gallery_item thumbnail" id="gallery_item_<?=$item['_id']; ?>">
 			<div class="gallery_item_image_wrapper">
 				<div class="gallery_item_image">
-					
+
 					<?php //echo $this->html->image('/li3b_gallery/images/'.$item['filename'], array('alt' => $item['title'])); ?>
 					<?php echo $this->html->image('/li3b_gallery/images/175/175/' . (string)$item['source'] . '?crop=true', array('alt' => $item['title'])); ?>
 				</div>
@@ -85,7 +85,7 @@
 			</div>
 		</div>
 	</div>
-	
+
 	<div class="row">
 		<div class="span4">
 		<h2>Add New Images</h2>
@@ -140,20 +140,18 @@
 		<h3>Update Item Information</h3>
 	</div>
 	<div id="edit_gallery_item_thumbnail"></div>
-	<?=$this->form->create(null, array('action' => '#', 'id' => 'edit_item_form', 'class' => 'form-vertical')); ?>
-		<fieldset>
-			<?=$this->form->field('item_id', array('wrap' => array('class' => 'modal_input'), 'type' => 'hidden', 'label' => false, 'id' => 'edit_item_id')); ?>
-			<?=$this->form->field('title', array('wrap' => array('class' => 'modal_input'))); ?>
-			<?=$this->form->field('description', array('wrap' => array('class' => 'modal_input'), 'type' => 'textarea')); ?>
-			<label class="checkbox"><?=$this->form->field('published', array('type' => 'checkbox', 'label' => false)); ?><strong>Published</strong></label>
-			<div class="last_update">
-				<p>Last updated: <span id="edit_gallery_item_last_update"></span></p>
-			</div>
-			<div class="submit_edit">
-				<?=$this->form->submit('Save', array('class' => 'btn btn-primary')); ?>
-				<?=$this->html->link('Cancel', '#', array('class' => 'close-btn btn')); ?>
-			</div>
-		</fieldset>
+	<?=$this->form->create(null, array('url' => '#', 'id' => 'edit_item_form', 'class' => 'form-vertical')); ?>
+		<?=$this->form->field('item_id', array('wrap' => array('class' => 'modal_input'), 'type' => 'hidden', 'label' => false, 'id' => 'edit_item_id')); ?>
+		<?=$this->form->field('title', array('wrap' => array('class' => 'modal_input'), 'class' => 'input-medium')); ?>
+		<?=$this->form->field('description', array('wrap' => array('class' => 'modal_input'), 'type' => 'textarea')); ?>
+		<label class="checkbox"><?=$this->form->field('published', array('type' => 'checkbox', 'label' => false)); ?><strong>Published</strong></label>
+		<div class="last_update">
+			<p>Last updated: <span id="edit_gallery_item_last_update"></span></p>
+		</div>
+		<div class="submit_edit">
+			<?=$this->form->submit('Save', array('class' => 'btn btn-primary')); ?>
+			<?=$this->html->link('Cancel', '#', array('class' => 'close-btn btn')); ?>
+		</div>
 	<?=$this->form->end(); ?>
 </div>
 
@@ -190,16 +188,15 @@ $(document).ready(function() {
 		editGalleryItem(item_id);
 		return false;
 	});
-	
+
 	// Make Item Gallery Cover
 	$('a.cover').click(function() {
 		var item_id = $(this).attr('rel');
 		setGalleryCover('<?=$document['_id']; ?>', item_id);
 		return false;
 	});
-	
+
 	$('a.close-btn').click(function(e) {
-	 
 	 e.preventDefault();
 	//$("#edit_gallery_item_modal").dialog("close");
 	$("#edit_gallery_item_modal").modal("hide");
