@@ -484,6 +484,10 @@ class Thumbnail extends \lithium\core\StaticObject {
 			}
 		// else if the thumbnail is rectangular, don't stretch it
 		} else {
+			// Just in case there was something wrong with the image and we didn't have a height we can divide with.
+			if(static::$_image->height <= 0) {
+				return false;
+			}
 			// if we aren't cropping then keep aspect ratio and contain image within the specified size
 			if(static::$_options['crop'] === false) {
 				$ratioOrig = static::$_image->width/static::$_image->height;
@@ -808,6 +812,10 @@ class Thumbnail extends \lithium\core\StaticObject {
 		// If the destination is null then $image will be the stream.
 		// If it was a path on disk, the image will be saved.
 		$imageStream = false;
+		// Ensure we have a resource.
+		if(!isset(static::$_image->resource)) {
+			return false;
+		}
 		switch(static::$_image->ext) {
 			case 'png':
 				if(static::$_options['quality'] != 0) {
