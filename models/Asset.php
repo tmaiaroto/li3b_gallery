@@ -12,13 +12,13 @@ use lithium\util\Inflector as Inflector;
 use \MongoDate;
 
 class Asset extends \lithium\data\Model {
-	
+
 	// Use the gridfs in MongoDB
 	protected $_meta = array(
 		'source' => 'fs.files',
 		'connection' => 'li3b_mongodb'
 	);
-	
+
 	// I get appended to with the plugin's Asset model (a good way to add extra meta data).
 	public static $fields = array(
 		// 'url' => array('label' => 'URL'),  ?? pretty urls for download?
@@ -34,15 +34,18 @@ class Asset extends \lithium\data\Model {
 		'ref' => array('type' => 'string'),
 		'file' => array('label' => 'Profile Image', 'type' => 'file')
 	);
-	
+
 	public static $validate = array(
 	);
 
 	public static function __init() {
 		self::$fields += static::$fields;
 		self::$validate += static::$validate;
-		
-		parent::__init();
+
+		// Future compatibility.
+		if(method_exists('\lithium\data\Model', '__init')) {
+			parent::__init();
+		}
 	}
 }
 
@@ -52,7 +55,7 @@ class Asset extends \lithium\data\Model {
 Asset::applyFilter('save', function($self, $params, $chain) {
 	// Set the mime-type based on file extension.
 	// This is used in the Content-Type header later on.
-	// Doing this here in a filter saves some work in other places and all 
+	// Doing this here in a filter saves some work in other places and all
 	// that's required is a file extension.
 	$ext = isset($params['entity']->fileExt) ? strtolower($params['entity']->fileExt):null;
 	switch($ext) {
@@ -71,7 +74,7 @@ Asset::applyFilter('save', function($self, $params, $chain) {
 		break;
 	}
 	$params['data']['contentType'] = $mimeType;
-	
+
 	return $chain->next($self, $params, $chain);
 });
 
