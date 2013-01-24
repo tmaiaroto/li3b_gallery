@@ -303,21 +303,20 @@ class ItemsController extends \lithium\action\Controller {
 
 		// Set the response to return
 		$response = array('success' => true);
-		
+
 		// If there was no item or gallery id provided
 		if(empty($id) || empty($gallery_id)) {
 			$response['success'] = false;
 		}
-		
+
 		// If $action is anything other than remove, 0, or false, the association will be added.
 		$remove = ($action == 'remove' || $action == '0' || $action == 'false') ? true:false;
-		
+
 		// Check to ensure that JSON was used to make the POST request
 		if(!$this->request->is('json')) {
 			$response['success'] = false;
 		}
-		
-		
+
 		// If we have what we need, update the item
 		if($response['success'] === true) {
 			if($remove) {
@@ -325,17 +324,17 @@ class ItemsController extends \lithium\action\Controller {
 			} else {
 				$item_update_query = array('$addToSet' => array('_galleries' => $gallery_id));
 			}
-			
+
 			$response['success'] = Item::update(
 				$item_update_query,
 				array('_id' => $id),
 				array('atomic' => false)
 			);
-			
+
 			// Also $pull the item id from the gallery's document ordering field
 			// The success of this is less important because if for some reason it isn't updated,
 			// it should straighten out later when items are re-ordered and it doesn't even matter
-			// if it's dirty. This is because it's not an association, it's just an ordering and 
+			// if it's dirty. This is because it's not an association, it's just an ordering and
 			// if an item doesn't exist in the order it will simply be ignored.
 			if($remove) {
 				$updateQuery = array('$pull' => array('gallery_item_order' => $id));
@@ -343,15 +342,15 @@ class ItemsController extends \lithium\action\Controller {
 				// If new association, the item will be added at the end of the order
 				$updateQuery = array('$addToSet' => array('gallery_item_order' => $id));
 			}
-			
+
 			Gallery::update(
 				$updateQuery,
 				array('_id' => $gallery_id),
 				array('atomic' => false)
 			);
-			
+
 		}
-		
+
 		$this->render(array('json' => $response));
 	}
 

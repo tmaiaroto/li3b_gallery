@@ -1,8 +1,7 @@
 <?php
 /**
  * Thumbnail generation class.
- * 
- * 
+ *
  */
 namespace li3b_gallery\extensions\util;
 
@@ -696,22 +695,22 @@ class Thumbnail extends \lithium\core\StaticObject {
 		$root = $root.'/';
 		return $root;
 	}
-	
+
 	/**
-	 * If the image is being generated and saved to disk, this will create 
+	 * If the image is being generated and saved to disk, this will create
 	 * the path and return the full path to disk for the $_destination to use.
-	 * 
+	 *
 	 * If the cache is in MongoDB, then this will not adjust $_destination.
-	 * 
+	 *
 	 * TODO: In the future, we also need to account for Amazon S3, etc.
-	 * 
+	 *
 	 * @return
 	 */
 	private static function _setDestination() {
 		if(empty(static::$_destination)) {
 			return null;
 		}
-		
+
 		switch(true) {
 			// MongoDB cache.
 			case (static::$_destination == 'mongo'):
