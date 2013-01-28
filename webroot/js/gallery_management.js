@@ -203,6 +203,11 @@ function enableAgileUploader(gallery_id) {
 		submitRedirect: '/admin/plugin/li3b_gallery/items/manage/' + gallery_id,
 		formId: 'upload-new-items',
 		flashVars: {
+			max_height: 1200,
+			max_width: 1200,
+			preview_max_height: 100,
+			preview_max_width: 100,
+			max_post_size: ((1536 * 1024) * 2),
 			form_action: '/admin/plugin/li3b_gallery/items/create',
 			file_limit: 20,
 			file_filter: '*.jpg;*.jpeg;*.gif;*.png;*.JPG;*.JPEG;*.GIF;*.PNG',
