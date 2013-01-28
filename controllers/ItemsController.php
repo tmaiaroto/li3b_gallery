@@ -275,8 +275,7 @@ class ItemsController extends \lithium\action\Controller {
 					array(
 						'$set' => $data
 					),
-					array('_id' => $id),
-					array('atomic' => false)
+					array('_id' => $id)
 				);
 
 			}
