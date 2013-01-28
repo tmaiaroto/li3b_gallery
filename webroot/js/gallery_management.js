@@ -211,7 +211,7 @@ function enableAgileUploader(gallery_id) {
 			form_action: '/admin/plugin/li3b_gallery/items/create',
 			file_limit: 20,
 			file_filter: '*.jpg;*.jpeg;*.gif;*.png;*.JPG;*.JPEG;*.GIF;*.PNG',
-			resize: 'jpg,jpeg,gif',
+			resize: 'jpg,jpeg,gif,png',
 			force_preview_thumbnail: 'true',
 			firebug: 'false',
 			button_up:'/li3b_gallery/img/add-file-normal.png',
