@@ -16,7 +16,7 @@
 						echo '<p class="small"><em>Created: ' . $this->time->to('nice', $gallery->created) . '</em></p>';
 						echo '<p>' . $gallery->description . '</p>';
 						echo '<p>';
-							echo $this->html->link('Manage Images', array('admin' => true, 'library' => 'li3b_gallery', 'controller' => 'items', 'action' => 'view', 'args' => array($gallery->url)), array('class' => 'btn btn-primary'));
+							echo $this->html->link('View Images', array('library' => 'li3b_gallery', 'controller' => 'items', 'action' => 'view', 'args' => array($gallery->url)), array('class' => 'btn btn-primary'));
 						echo '</p>';
 					echo '</div>';
 				echo '</div>';
