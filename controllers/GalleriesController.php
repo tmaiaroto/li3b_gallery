@@ -145,6 +145,44 @@ class GalleriesController extends \lithium\action\Controller {
 	}
 
 	/**
+	 * Public index method to list all published galleries in the system.
+	 *
+	 * @return
+	 */
+	public function index() {
+		// Default options for pagination, merge with URL parameters
+		$defaults = array('page' => 1, 'limit' => 10, 'order' => 'created.desc');
+		$params = Set::merge($defaults, $this->request->params);
+
+		if((isset($params['page'])) && ($params['page'] == 0)) {
+			$params['page'] = 1;
+		}
+		list($limit, $page, $order) = array($params['limit'], $params['page'], $params['order']);
+
+		// never allow a limit of 0
+		$limit = ($limit < 0) ? 1:$limit;
+
+		$conditions = array('published' => 1);
+
+		// Get the documents and the total
+		$documents = Gallery::find('all', array(
+			'conditions' => $conditions,
+			'limit' => (int)$limit,
+			'offset' => ((int)$page - 1) * (int)$limit,
+			'order' => $params['order']
+		));
+
+		$total = Gallery::find('count', array(
+			'conditions' => $conditions
+		));
+
+		$totalPages = ((int)$limit > 0) ? ceil($total / $limit):0;
+
+		// Set data for the view template
+		$this->set(compact('documents', 'limit', 'page', 'totalPages', 'total'));
+	}
+
+	/**
 	 * Public view method.
 	 * This would be a page on the web site that included a
 	 * @param type $id

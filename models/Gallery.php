@@ -1,20 +1,20 @@
 <?php
 /**
  * Gallery Plugin
- * 
+ *
 */
 namespace li3b_gallery\models;
 
 use lithium\core\Libraries;
 
 class Gallery extends \li3b_core\models\BaseModel {
-	
+
 	protected $_meta = array(
 		'locked' => true,
 		'connection' => 'li3b_mongodb',
 		'source' => 'li3b_gallery.galleries'
 	);
-	
+
 	// Add new fields here
 	protected $_schema = array(
 		'_id' => array('type' => 'id'),
@@ -29,11 +29,11 @@ class Gallery extends \li3b_core\models\BaseModel {
 		'modified' => array('type' => 'date'),
 		'created' => array('type' => 'date')
 	);
-	
+
 	public $url_field = 'title';
-	
+
 	public $url_separator = '-';
-	
+
 	public $search_schema = array(
 		'description' => array(
 			'weight' => 1
@@ -42,15 +42,15 @@ class Gallery extends \li3b_core\models\BaseModel {
 			'weight' => 1
 		)
 	);
-	
+
 	public static function __init() {
-		$class =  __CLASS__; 
+		$class =  __CLASS__;
 		$libConfig = Libraries::get('gallery');
 		if(isset($libConfig['collectionPrefix'])) {
 			 static::_object()->_meta['source'] = $libConfig['collectionPrefix'] . 'galleries';
 		}
-		
+
 		parent::__init();
 	}
-}	
+}
 ?>

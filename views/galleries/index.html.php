@@ -1,7 +1,6 @@
 <div class="row">
 	<div class="span12">
 		<h2 id="page-heading">Galleries</h2>
-
 		<ul class="thumbnails">
 		<?php
 		foreach($documents as $gallery) {
@@ -17,11 +16,7 @@
 						echo '<p class="small"><em>Created: ' . $this->time->to('nice', $gallery->created) . '</em></p>';
 						echo '<p>' . $gallery->description . '</p>';
 						echo '<p>';
-							echo $this->html->link('Manage Images', array('admin' => true, 'library' => 'li3b_gallery', 'controller' => 'items', 'action' => 'manage', 'admin' => true, 'args' => array($gallery->_id)), array('class' => 'btn btn-primary'));
-							echo ' ';
-							echo $this->html->link('Edit', array('admin' => true, 'library' => 'li3b_gallery', 'controller' => 'galleries', 'action' => 'update', 'admin' => true, 'args' => array($gallery->_id)), array('class' => 'btn'));
-							echo ' ';
-							echo $this->html->link('Delete', array('admin' => true, 'library' => 'li3b_gallery', 'controller' => 'galleries', 'action' => 'delete', 'admin' => true, 'args' => array($gallery->_id)), array('onClick' => 'return confirm(\'Are you sure you want to delete ' . $gallery->title . '?\')', 'class' => 'btn'));
+							echo $this->html->link('Manage Images', array('admin' => true, 'library' => 'li3b_gallery', 'controller' => 'items', 'action' => 'view', 'args' => array($gallery->url)), array('class' => 'btn btn-primary'));
 						echo '</p>';
 					echo '</div>';
 				echo '</div>';
